@@ -44,6 +44,42 @@ class MyBot(BaseAgent):
 
         return self.controller_state
 
+    def get_target(self, packet: GameTickPacket) -> Vec3:
+        if self.maneuver == 'Attack':
+            return Vec3(packet.game_ball.physics.location)
+        else:
+            # Constant values can be found the the FieldInfo:
+            info = self.get_field_info()
+            
+            # Manually construct a list of all big boost pads
+            # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
+            big_pads = []
+            for i in range(info.num_boosts):
+                pad = info.boost_pads[i]
+                if pad.is_full_boost:
+                    big_pads.append(pad)
+
+            return Vec3(big_pads[0].location)
+
+    def set_maneuver(self, packet: GameTickPacket):
+        if self.maneuver == None:
+            ball_location = Vec3(packet.game_ball.physics.location)
+
+            my_car = packet.game_cars[self.index]
+            car_location = Vec3(my_car.physics.location)
+
+            car_to_ball = ball_location - car_location
+
+            other_car = packet.game_cars[1]
+            opp_location = Vec3(other_car.physics.location)
+
+            opp_to_ball = ball_location - opp_location
+
+            if (abs(car_to_ball) < abs(opp_to_ball) | my_car.boost > 60):
+                self.maneuver = 'Attack'
+            else:
+                self.maneuver = 'GetBoostAtBack'
+
 
 def find_correction(current: Vec3, ideal: Vec3) -> float:
     # Finds the angle from current to ideal vector in the xy-plane. Angle will be between -pi and +pi.
@@ -64,6 +100,8 @@ def find_correction(current: Vec3, ideal: Vec3) -> float:
     return diff
 
 
+
+
 def draw_debug(renderer, car, ball, action_display):
     renderer.begin_rendering()
     # draw a line from the car to the ball
@@ -72,38 +110,3 @@ def draw_debug(renderer, car, ball, action_display):
     renderer.draw_string_3d(car.physics.location, 2, 2, action_display, renderer.white())
     renderer.end_rendering()
 
-def get_target(self, packet: GameTickPacket) -> Vec3:
-    if self.maneuver == 'Attack':
-        return Vec3(packet.game_ball.physics.location)
-    else:
-        # Constant values can be found the the FieldInfo:
-        info = self.get_field_info()
-        
-        # Manually construct a list of all big boost pads
-        # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
-        big_pads = []
-        for i in range(info.num_boosts):
-            pad = info.boost_pads[i]
-            if pad.is_full_boost:
-                big_pads.append(pad)
-
-        return Vec3(big_pads[0].location)
-
-def set_maneuver(self, packet: GameTickPacket):
-    if self.maneuver == None:
-        ball_location = Vec3(packet.game_ball.physics.location)
-
-        my_car = packet.game_cars[self.index]
-        car_location = Vec3(my_car.physics.location)
-
-        car_to_ball = ball_location - car_location
-
-        other_car = packet.game_cars[1]
-        opp_location = Vec3(other_car.physics.location)
-
-        opp_to_ball = ball_location - opp_location
-
-        if (abs(car_to_ball) < abs(opp_to_ball) | my_car.boost > 60):
-            self.maneuver = 'Attack'
-        else:
-            self.maneuver = 'GetBoostAtBack'
