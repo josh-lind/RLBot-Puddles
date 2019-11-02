@@ -183,13 +183,22 @@ class MyBot(BaseAgent):
 
         steer_correction_radians = find_correction(car_direction, Vec3(ideal) - Vec3(my_car.physics.location))
 
-        if steer_correction_radians > 0:
-            # Positive radians in the unit circle is a turn to the left.
-            turn = -1.0  # Negative value for a turn to the left.
-            # action_display = "turn left"
+        # Turn left if steer correction is positive in radians
+        turn_direction_multiplier = -1.0 if steer_correction_radians > 0 else 1.0
+        abs_correction = abs(steer_correction_radians)
+        if abs_correction >= .2:
+            turn = 1 * turn_direction_multiplier
         else:
-            turn = 1.0
-            # action_display = "turn right"
+            turn = abs_correction * 5 * turn_direction_multiplier
+
+        # Powerslide if the angle of correction is more than 1 radian
+        if abs_correction > 1.3:
+            self.controller_state.handbrake = True
+        else:
+            self.controller_state.handbrake = False
+
+        # TODO: change. always boost
+        self.controller_state.boost = True
 
         self.controller_state.throttle = 1.0
         self.controller_state.steer = turn
