@@ -128,9 +128,10 @@ class MyBot(BaseAgent):
     def set_maneuver(self, packet: GameTickPacket):
         if self.maneuver.name == None:
             self.maneuver.name = "Attack"
-        elif self.maneuver.name == "Attack" and self.will_enter_goal(packet):
+        elif self.maneuver.name is not "PreventGoal" and self.will_enter_goal(packet):
             self.maneuver.name = "PreventGoal"
             self.maneuver.prevent_goal_properties.chasing_ball = False
+        
 
     def exec_maneuver(self, packet: GameTickPacket):
         if self.maneuver.name == "PreventGoal":
@@ -202,6 +203,38 @@ class MyBot(BaseAgent):
 
         self.controller_state.throttle = 1.0
         self.controller_state.steer = turn
+
+    def get_boost(self, packet: GameTickPacket):
+        info = self.get_field_info()
+        # Manually construct a list of all big boost pads
+        min_dist = 50000
+        min_dist_index = 0
+        # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
+        for i in range(info.num_boosts):
+            pad = info.boost_pads[i]
+            if pad.is_full_boost:
+                dist = abs((pad.physics.location-packet.game_cars[self.index].physics.location).length())
+                if min_dist > dist:
+                    min_dist=dist
+                    min_dist_index = i
+        self.go_to_position(packet,info.boost_pads[min_dist_index].physics.location)
+
+    def get_home_boost(self, packet: GameTickPacket):
+        boost_Yval = -4100.0 if self.team == 0 else 4100.0
+        info = self.get_field_info()
+        # Manually construct a list of all big boost pads
+        min_dist = 50000
+        min_dist_index = 0
+        # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
+        for i in range(info.num_boosts):
+            pad = info.boost_pads[i]
+            if pad.is_full_boost and abs(pad.physics.location.y-boost_Yval) < 100:
+                dist = abs((pad.physics.location-packet.game_cars[self.index].physics.location).length())
+                if min_dist > dist:
+                    min_dist=dist
+                    min_dist_index = i
+        self.go_to_position(packet,info.boost_pads[min_dist_index].physics.location)
+
 
 
 def find_correction(current: Vec3, ideal: Vec3) -> float:
