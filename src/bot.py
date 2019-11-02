@@ -263,6 +263,16 @@ def find_correction(current: Vec3, ideal: Vec3) -> float:
 
     return diff
 
+#used to check position vectors
+def isbetween(x: float, y1: float, y2: float):
+    if  y1 <= x <=y2:
+        return True
+
+    elif y1 >= x >=y2:
+        return True
+    
+    return False
+
 def draw_debug(renderer, car, ball, action_display):
     renderer.begin_rendering()
     # draw a line from the car to the ball
