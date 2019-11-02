@@ -1,4 +1,5 @@
 import math
+import datetime, csv # Used for logging 
 
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
@@ -21,6 +22,7 @@ class MyBot(BaseAgent):
         self.maneuver = Maneuver()
         self.maneuver.name = None
         self.maneuver.prevent_goal_properties = Maneuver()
+        self.time_since_last_log = datetime.datetime.now() # Don't want to save a log any more than .1 seconds, but also don't want it to be blocking 
 
     # def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
     #     self.set_maneuver(packet)
@@ -58,7 +60,36 @@ class MyBot(BaseAgent):
 
         draw_debug(self.renderer, my_car, packet.game_ball, self.maneuver.name)
 
+        # Update log if it's been a tenth of a second since we last did 
+        if (datetime.datetime.now() - self.time_since_last_log).total_seconds() > .1:
+            self.update_log(packet)
+            self.time_since_last_log = 0 
+
         return self.controller_state
+
+    def update_log(self, packet):
+
+        csv_line = []
+            
+        # Bot XYZ
+        csv_line.insert(0, str(packet.game_cars[0].physics.location.x))
+        csv_line.insert(1, str(packet.game_cars[0].physics.location.y))
+        csv_line.insert(2, str(packet.game_cars[0].physics.location.z))
+
+        # Other Player XYZ 
+        csv_line.insert(3, str(packet.game_cars[1].physics.location.x))
+        csv_line.insert(4, str(packet.game_cars[1].physics.location.y))
+        csv_line.insert(5, str(packet.game_cars[1].physics.location.z))
+
+        # Append onto the variable that holds all our data 
+        self.collected_data.append(csv_line)
+
+        # Writing freshest iteration to file 
+        # For WHATEVER F*CKING REASON the file itself is run in the RLBot home 
+        # directory and not FROM THIS F*CKING FILE... there's 2.5 hours down the drain
+        with open("./MyBots/RLBot-Puddles/src/output/output.csv", "w", newline="") as f: 
+            writer = csv.writer(f)
+            writer.writerows(self.collected_data)
 
     # def get_target(self, packet: GameTickPacket) -> Vec3:
     #     if self.maneuver.name == "Attack":
