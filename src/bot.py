@@ -18,8 +18,9 @@ class MyBot(BaseAgent):
     def initialize_agent(self):
         # This runs once before the bot starts up
         self.controller_state = SimpleControllerState()
-        self.maneuver = type('', (), {})()
-        self.maneuver.prevent_goal_properties = type('', (), {})()
+        self.maneuver = Maneuver()
+        self.maneuver.name = None
+        self.maneuver.prevent_goal_properties = Maneuver()
 
     # def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
     #     self.set_maneuver(packet)
@@ -92,7 +93,7 @@ class MyBot(BaseAgent):
 
     def prevent_goal(self, packet: GameTickPacket):
         goalYVal = -5200.0 if self.team == 0 else 5200.0
-        car_to_own_goal = Vec3(0.0, goalYVal, 0.0) - packet.game_cars[self.index]
+        car_to_own_goal = Vec3(0.0, goalYVal, 0.0) - packet.game_cars[self.index].physics.location
 
         if not self.will_enter_goal(packet):
             self.maneuver.name = None
@@ -113,7 +114,7 @@ class MyBot(BaseAgent):
             for i in range(0, ball_prediction.num_slices):
                 prediction_slice = ball_prediction.slices[i]
                 location = prediction_slice.physics.location
-                if (location.y - goalYVal) < 30.0 and abs(location.x) < 900.0:
+                if abs(location.y - goalYVal) < 30.0 and abs(location.x) < 900.0:
                     return True
         return False
 
@@ -133,7 +134,7 @@ class MyBot(BaseAgent):
         car_orientation = Orientation(my_car.physics.rotation)
         car_direction = car_orientation.forward
 
-        steer_correction_radians = find_correction(car_direction, ideal - my_car.physics.location)
+        steer_correction_radians = find_correction(car_direction, Vec3(ideal) - Vec3(my_car.physics.location))
 
         if steer_correction_radians > 0:
             # Positive radians in the unit circle is a turn to the left.
