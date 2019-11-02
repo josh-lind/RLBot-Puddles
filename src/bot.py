@@ -1,5 +1,5 @@
 import math
-import datetime, csv # Used for logging 
+import csv, time # Used for logging 
 
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
@@ -16,13 +16,30 @@ class Maneuver:
 
 class MyBot(BaseAgent):
 
+    def get_next_csv_name(self):
+
+        # Read in the number we should make it 
+        f = open("./MyBots/RLBot-Puddles/src/nextcsvnumber.txt", "r"); 
+        returnValue = int(f.read())
+        f.close()
+
+        # Update the file we just read from to increment it 
+        with open("./MyBots/RLBot-Puddles/src/nextcsvnumber.txt", "w") as f: 
+            f.write(str(int(returnValue) + 1))
+
+        # Actually return the value 
+        return returnValue 
+    
+    # This runs once before the bot starts up
     def initialize_agent(self):
-        # This runs once before the bot starts up
+       
         self.controller_state = SimpleControllerState()
         self.maneuver = Maneuver()
         self.maneuver.name = None
         self.maneuver.prevent_goal_properties = Maneuver()
-        self.time_since_last_log = datetime.datetime.now() # Don't want to save a log any more than .1 seconds, but also don't want it to be blocking 
+        self.collected_data = []
+        self.time_since_last_log = time.time() # Don't want to save a log any more than .1 seconds, but also don't want it to be blocking 
+        self.current_csv_name = self.get_next_csv_name()
 
     # def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
     #     self.set_maneuver(packet)
@@ -61,7 +78,7 @@ class MyBot(BaseAgent):
         draw_debug(self.renderer, my_car, packet.game_ball, self.maneuver.name)
 
         # Update log if it's been a tenth of a second since we last did 
-        if (datetime.datetime.now() - self.time_since_last_log).total_seconds() > .1:
+        if time.time() - self.time_since_last_log > .1:
             self.update_log(packet)
             self.time_since_last_log = 0 
 
@@ -87,7 +104,7 @@ class MyBot(BaseAgent):
         # Writing freshest iteration to file 
         # For WHATEVER F*CKING REASON the file itself is run in the RLBot home 
         # directory and not FROM THIS F*CKING FILE... there's 2.5 hours down the drain
-        with open("./MyBots/RLBot-Puddles/src/output/output.csv", "w", newline="") as f: 
+        with open("./MyBots/RLBot-Puddles/src/output/" + str(self.current_csv_name) + ".csv", "w", newline="") as f: 
             writer = csv.writer(f)
             writer.writerows(self.collected_data)
 
@@ -120,7 +137,6 @@ class MyBot(BaseAgent):
             self.prevent_goal(packet)
         else:
             self.go_to_ball(packet)
-
 
     def prevent_goal(self, packet: GameTickPacket):
         goalYVal = -5200.0 if self.team == 0 else 5200.0
