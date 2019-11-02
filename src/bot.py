@@ -45,7 +45,7 @@ class MyBot(BaseAgent):
         return self.controller_state
 
     def get_target(self, packet: GameTickPacket) -> Vec3:
-        if self.maneuver == 'Attack':
+        if self.maneuver == "Attack":
             return Vec3(packet.game_ball.physics.location)
         else:
             # Constant values can be found the the FieldInfo:
@@ -75,10 +75,10 @@ class MyBot(BaseAgent):
 
             opp_to_ball = ball_location - opp_location
 
-            if (abs(car_to_ball) < abs(opp_to_ball) | my_car.boost > 60):
-                self.maneuver = 'Attack'
+            if car_to_ball.length() < opp_to_ball.length() or my_car.boost > 60.0:
+                self.maneuver = "Attack"
             else:
-                self.maneuver = 'GetBoostAtBack'
+                self.maneuver = "GetBoostAtBack"
 
 
 def find_correction(current: Vec3, ideal: Vec3) -> float:
@@ -99,9 +99,6 @@ def find_correction(current: Vec3, ideal: Vec3) -> float:
 
     return diff
 
-
-
-
 def draw_debug(renderer, car, ball, action_display):
     renderer.begin_rendering()
     # draw a line from the car to the ball
@@ -109,4 +106,3 @@ def draw_debug(renderer, car, ball, action_display):
     # print the action that the bot is taking
     renderer.draw_string_3d(car.physics.location, 2, 2, action_display, renderer.white())
     renderer.end_rendering()
-
