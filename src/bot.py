@@ -125,14 +125,22 @@ class MyBot(BaseAgent):
 
     #         return Vec3(big_pads[0].location)
 
+    # This method sets the active maneuver
     def set_maneuver(self, packet: GameTickPacket):
+        my_car = packet.game_cars[self.index]
+        car_location = Vec3(my_car.physics.location)
+        opponent_goal_y = -7000.0 if self.team == 1 else 7000.0
+        ball_loc = packet.game_ball.physics.location
+
         if self.maneuver.name == None:
             self.maneuver.name = "Attack"
         elif self.maneuver.name is not "PreventGoal" and self.will_enter_goal(packet):
             self.maneuver.name = "PreventGoal"
             self.maneuver.prevent_goal_properties.chasing_ball = False
+        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y)
+            self.maneuver.name = "GetHomeBoost"
         
-
+    # This method calls the correct functions dependant on what maneuver we are executing
     def exec_maneuver(self, packet: GameTickPacket):
         if self.maneuver.name == "PreventGoal":
             self.prevent_goal(packet)
