@@ -186,14 +186,14 @@ class MyBot(BaseAgent):
 
         ''' Predicted Ball Position ''' 
         # 1-Second Slice Values
-        csv_line.insert(63, str(ball_prediction_struct[60].location.x))
-        csv_line.insert(64, str(ball_prediction_struct[60].location.y))
-        csv_line.insert(65, str(ball_prediction_struct[60].location.z))
+        csv_line.insert(63, str(ball_prediction_struct.slices[60].physics.location.x))
+        csv_line.insert(64, str(ball_prediction_struct.slices[60].physics.location.y))
+        csv_line.insert(65, str(ball_prediction_struct.slices[60].physics.location.z))
 
         # 2-Second Slice Values
-        csv_line.insert(66, str(ball_prediction_struct[120].location.x))
-        csv_line.insert(67, str(ball_prediction_struct[120].location.y))
-        csv_line.insert(68, str(ball_prediction_struct[120].location.z))
+        csv_line.insert(66, str(ball_prediction_struct.slices[120].physics.location.x))
+        csv_line.insert(67, str(ball_prediction_struct.slices[120].physics.location.y))
+        csv_line.insert(68, str(ball_prediction_struct.slices[120].physics.location.z))
 
         ''' BoostPadState Object '''
         # Activation state for each of the 34 boost pads 
