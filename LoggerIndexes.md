@@ -1,0 +1,5 @@
+- **0-2:** Bot Location X, Y, Z
+- **3-5:** Bot Rotation X, Y, Z 
+- **6-8:** Bot Velocity X/s, Y/s, Z/s 
+- **9-11:** Angular Velocity Roll/s, Pitch/s, Yaw/s
+- **12-17:** Bot score, bot goals, bot own goals, bot saves, bot shots, bot demolitions respectively  

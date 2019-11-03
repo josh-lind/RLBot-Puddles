@@ -208,6 +208,7 @@ class MyBot(BaseAgent):
         # TODO: This
 
         # Deciding what the "correct state" in this position
+        correct_state = self.decide_correct_state(self, csv_line) 
 
         # Append onto the variable that holds all our data 
         self.collected_data.append(csv_line)
@@ -218,6 +219,52 @@ class MyBot(BaseAgent):
         with open("./MyBots/RLBot-Puddles/src/output/" + str(self.current_csv_name) + ".csv", "w", newline="") as f: 
             writer = csv.writer(f)
             writer.writerows(self.collected_data)
+
+    ''' 
+        0 = Actively Saving
+        1 = Defending 
+        2 = Attacking 
+        3 = Scoring
+        4 = Grabbing Boost 
+    '''
+    def decide_correct_state(self, csv_line): 
+
+        # If the ball is actively projected to go in our net in the 
+        # next six seconds, save it. 
+        # TODO: Write a method that returns True if this will occur. 
+
+        # Otherwise, if the ball is "safely scoreable", save it 
+        # TODO: Write a method that returns true if the following
+        # criteria are true: 
+        #   - The ball is in scoreable range (will be in middle half 
+        #     front half of field)
+        #   - We can beat the opponent to the ball if both players
+        #     use all their boost by at least .5 seconds
+
+        # Otherwise, if we are in a situation wehre we "need to 
+        # defend", defend. 
+        # TODO: Write a method that returns true if the following
+        # criteria are true: 
+        #    - If the opponent is able to clear towards our net (between
+        #      their goal and the ball and within a distance of maybe like
+        #      a quarter of the field length, so like 500uu)
+
+        # Otherwise, if it's safe to attack and we have enough boost, 
+        # attack. 
+        # TODO: Write a method that returns true if the following 
+        # criteria are true: 
+        #    - If The opponent is not immediately able to clear towards 
+        #      our net (can use same method as above)
+        #    - We have at least 50 (arbitary value) boost 
+
+        # Otherwise, grab some boost unless we have enough boost. 
+        # TODO: Write a method that returns true if the following
+        # criteria are true: 
+        #    - If we are below thirty boost
+
+        # Otherwise, play defensively. 
+        # TODO: Nothing! This is a "fallback" case! 
+
 
     def set_maneuver(self, packet: GameTickPacket, prediction_slices):
         my_car = packet.game_cars[self.index]
