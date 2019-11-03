@@ -1,7 +1,6 @@
 import math
 import csv, time # Used for logging 
 
-
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
@@ -58,7 +57,7 @@ class MyBot(BaseAgent):
 
         return self.controller_state
 
-    def update_log(self, packet):
+    def update_log(self, packet, ball_prediction_struct):
 
         csv_line = []
 
@@ -186,15 +185,29 @@ class MyBot(BaseAgent):
         csv_line.insert(62, str(packet.game_info.is_overtime))
 
         ''' Predicted Ball Position ''' 
+        # 1-Second Slice Values
+        csv_line.insert(63, str(ball_prediction_struct[60].location.x))
+        csv_line.insert(64, str(ball_prediction_struct[60].location.y))
+        csv_line.insert(65, str(ball_prediction_struct[60].location.z))
+
+        # 2-Second Slice Values
+        csv_line.insert(66, str(ball_prediction_struct[120].location.x))
+        csv_line.insert(67, str(ball_prediction_struct[120].location.y))
+        csv_line.insert(68, str(ball_prediction_struct[120].location.z))
 
         ''' BoostPadState Object '''
         # Activation state for each of the 34 boost pads 
-        index = 63
+        index = 69
         for boost_pad in packet.game_boosts:
             csv_line.insert(index, str(boost_pad.is_active))
             csv_line.insert(index + 1, str(boost_pad.timer))
-            index += 2 
-        index = 63
+            index += 2
+        index = 69
+
+        # If the ball is projected to be in the goal at ANY point within the next six seconds (True if so, False if not)
+        # TODO: This
+
+        # Deciding what the "correct state" in this position
 
         # Append onto the variable that holds all our data 
         self.collected_data.append(csv_line)
@@ -338,7 +351,6 @@ class MyBot(BaseAgent):
         self.go_to_position(packet, info.boost_pads[min_dist_index].location)
         if min_dist < 150:
             self.maneuver.name = None
-
 
 
 def find_correction(current: Vec3, ideal: Vec3) -> float:
