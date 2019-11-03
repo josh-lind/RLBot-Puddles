@@ -306,10 +306,10 @@ class MyBot(BaseAgent):
         # Turn left if steer correction is positive in radians
         turn_direction_multiplier = -1.0 if steer_correction_radians > 0 else 1.0
         abs_correction = abs(steer_correction_radians)
-        if abs_correction >= .2:
+        if abs_correction >= .4:
             turn = 1 * turn_direction_multiplier
         else:
-            turn = abs_correction * 5 * turn_direction_multiplier
+            turn = abs_correction * 2.5 * turn_direction_multiplier
 
         # Powerslide if the angle of correction is more than 1 radian
         if abs_correction > 1.3:
