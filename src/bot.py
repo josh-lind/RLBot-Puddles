@@ -241,7 +241,7 @@ class MyBot(BaseAgent):
         elif self.maneuver.name == "GetHomeBoost":
             self.get_home_boost(packet)
         else:
-            self.go_to_ball(packet)
+            self.hit_ball_to_goal(packet)
 
     def prevent_goal(self, packet: GameTickPacket):
         goalYVal = -5200.0 if self.team == 0 else 5200.0
@@ -281,20 +281,31 @@ class MyBot(BaseAgent):
     def go_to_ball(self, packet: GameTickPacket):
         self.go_to_position(packet, packet.game_ball.physics.location)
 
-    # def hit_ball_to_goal(self, packet: GameTickPacket):
-    #     ball_prediction = self.get_ball_prediction_struct()
-    #     my_car = packet.game_cars[self.index]
-    #     speed = my_car.physics.velocity.length()
+    def hit_ball_to_goal(self, packet: GameTickPacket):
+        ball_prediction = self.get_ball_prediction_struct()
+        my_car = packet.game_cars[self.index]
+        speed = Vec3(my_car.physics.velocity).length()
 
-    #     starting_time = ball_prediction.slices[0].game_seconds
+        info = self.get_field_info()
+        their_goal = info.goals[1 - self.team].location
 
-    #     if ball_prediction is not None:
-    #         for i in range(0, ball_prediction.num_slices):
-    #             prediction_slice = ball_prediction.slices[i]
-    #             location = prediction_slice.physics.location
-    #             if abs(location.y - goalYVal) < 80 and abs(location.x) < 900.0:
-    #                 return True
-    #     self.go_to_ball(packet)
+        starting_time = ball_prediction.slices[0].game_seconds
+
+        if ball_prediction is not None:
+            for i in range(0, ball_prediction.num_slices):
+                prediction_slice = ball_prediction.slices[i]
+                location = prediction_slice.physics.location
+                ball_difference: Vec3 = Vec3(location) - Vec3(my_car.physics.location)
+                distance_to_ball = ball_difference.length()
+                if distance_to_ball < speed * (prediction_slice.game_seconds - starting_time):
+                    self.go_to_position(packet, self.get_vector_90_away_from_goal(location, their_goal))
+                    return
+        self.go_to_ball(packet)
+
+    def get_vector_90_away_from_goal(self, ball_location: Vec3, goal_location: Vec3) -> Vec3:
+        goal_to_ball: Vec3 = Vec3(ball_location) - Vec3(goal_location)
+        goal_to_ball = goal_to_ball / goal_to_ball.length()
+        return ball_location + goal_to_ball
 
     def go_to_position(self, packet: GameTickPacket, ideal: Vec3):
         my_car = packet.game_cars[self.index]
@@ -377,10 +388,10 @@ def find_correction(current: Vec3, ideal: Vec3) -> float:
 
 #used to check position vectors
 def isbetween(x: float, y1: float, y2: float) -> bool:
-    if  y1 <= x <=y2:
+    if  y1 <= x <= y2:
         return True
 
-    elif y1 >= x >=y2:
+    elif y1 >= x >= y2:
         return True
     
     return False
