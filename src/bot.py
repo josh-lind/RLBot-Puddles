@@ -243,7 +243,7 @@ class MyBot(BaseAgent):
         #   - We can beat the opponent to the ball if both players
         #     use all their boost by at least .5 seconds
         if scoring_is_worth(self)
-            return 2 
+            return 3
 
         # Otherwise, if we are in a situation wehre we "need to 
         # defend", defend. 
