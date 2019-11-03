@@ -80,7 +80,7 @@ class MyBot(BaseAgent):
 
         # Update log if it's been a tenth of a second since we last did 
         if time.time() - self.time_since_last_log > .1:
-            self.update_log(packet)
+            self.update_log(packet, self.get_ball_prediction_struct())
             self.time_since_last_log = 0 
 
         return self.controller_state
