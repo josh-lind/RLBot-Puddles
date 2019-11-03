@@ -7,6 +7,8 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 from util.orientation import Orientation
 from util.vec import Vec3
 
+import numpy 
+
 # from RLUtilities.GameInfo import GameInfo
 # from RLUtilities.Simulation import Input
 # from RLUtilities.LinearAlgebra import norm
@@ -200,6 +202,9 @@ class MyBot(BaseAgent):
         csv_line.insert(69, str(packet.game_cars[0].boost))
         csv_line.insert(70, str(packet.game_cars[1].boost))
 
+        # Uh, thing 
+        csv_line.insert(71, str(self.decide_correct_state(csv_line)))
+
         ''' BoostPadState Object '''
         # Activation state for each of the 34 boost pads 
         index = 71
@@ -213,7 +218,7 @@ class MyBot(BaseAgent):
         # TODO: This
 
         # Deciding what the "correct state" in this position
-        correct_state = self.decide_correct_state(self, csv_line) 
+        correct_state = self.decide_correct_state(csv_line) 
 
         # Append onto the variable that holds all our data 
         self.collected_data.append(csv_line)
@@ -224,6 +229,82 @@ class MyBot(BaseAgent):
         with open("./MyBots/RLBot-Puddles/src/output/" + str(self.current_csv_name) + ".csv", "w", newline="") as f: 
             writer = csv.writer(f)
             writer.writerows(self.collected_data)
+
+    def actively_saving_is_worth(self, csv_line): 
+
+        ball_prediction_struct = self.get_ball_prediction_struct()
+
+        for i in ball_prediction_struct: 
+            if i.physics.location.y > 5120 or i.physics.location.y < -5120: 
+                return True 
+        return False 
+
+    # Returns true if the following criteria are true: 
+    #   - The ball is in scoreable range (will be in middle half 
+    #     front half of field)
+    #   - We can beat the opponent to the ball if both players
+    #     use all their boost by at least .5 seconds
+    def scoring_is_worth(self, csv_line):
+
+        # If blue, only valid if on orange side 
+        if self.team is 0: 
+
+            if self.game_cars[0].physics.location.y > 3500 and self.game_cars[0].physics.location.x < 2000 and self.game_cars[0].physics.location.x > -2000:
+
+                # If the player is closer than the opponent 
+                if numpy.linalg.norm(self.game_cars[0].physics.location - self.game_ball.physics.location) - numpy.linalg.norm(self.game_cars[1].physics.location - self.game_ball.physics.location) < 0:
+                    return True 
+
+        # If orange, only valid on blue side 
+        else: 
+
+            if self.game_cars[0].physics.location.y < -3500 and self.game_cars[0].physics.location.x < 2000 and self.game_cars[0].physics.location.x > -2000:
+                
+                # If the player is closer than the opponent 
+                if numpy.linalg.norm(self.game_cars[0].physics.location - self.game_ball.physics.location) - numpy.linalg.norm(self.game_cars[1].physics.location - self.game_ball.physics.location) < 0:
+                    return True
+        return False 
+
+    # Returns true if the following criteria are true: 
+    #    - If the opponent is able to clear towards our net (between
+    #      their goal and the ball and within a distance of maybe like
+    #      a quarter of the field length, so like 500uu)
+    def defending_is_necessary(self, csv_line):        
+
+        # If they're behind the ball and within 2000 unreal units of the ball, prepare for a bomb 
+        if self.team is 0: 
+
+            if self.game_cars[1].physics.location.y > self.game_ball.physics.location.y and numpy.linalg.norm(self.game_cars[1].physics.location - self.game_ball.physics.location) < 2000:
+                return True
+
+        else: 
+
+            if self.game_cars[1].physics.location.y < self.game_ball.physics.location.y and numpy.linalg.norm(self.game_cars[1].physics.location - self.game_ball.physics.location) < 2000:
+                return True
+        return False 
+
+    # Returns true if the following criteria are true: 
+    #    - If The opponent is not immediately able to clear towards 
+    #      our net (can use same method as above)
+    #    - We have at least 50 (arbitary value) boost
+    def attack_is_worth(self, csv_line):        
+        
+        if self.team is 0: 
+
+            if not self.game_cars[1].physics.location.y > self.game_ball.physics.location.y and numpy.linalg.norm(self.game_cars[1].physics.location - self.game_ball.physics.location) < 2000 and self.game_cars[0].boost > 50:
+                return True
+            return False 
+
+        else: 
+
+            if not self.game_cars[1].physics.location.y < self.game_ball.physics.location.y and numpy.linalg.norm(self.game_cars[1].physics.location - self.game_ball.physics.location) < 2000 and self.game_cars[0].boost > 50:
+                return True
+            return False 
+
+    # Returns true if we're low on boost, basically 
+    def boost_is_worth(self, csv_line):
+
+        return int(csv_line[69]) <= 30 
 
     ''' 
         0 = Actively Saving
@@ -236,64 +317,31 @@ class MyBot(BaseAgent):
 
         # If the ball is actively projected to go in our net in the 
         # next six seconds, save it. 
-        if actively_saving_is_worth(self, csv_line)
+        if self.actively_saving_is_worth(csv_line):
+            
             return 0 
 
         # Otherwise, if the ball is "safely scoreable", save it 
-        if scoring_is_worth(self, csv_line)
+        if self.scoring_is_worth(csv_line):
             return 3
 
         # Otherwise, if we are in a situation wehre we "need to 
         # defend", defend.        
-        if defending_is_necessary(self, csv_line) 
+        if self.defending_is_necessary(csv_line):
             return 1 
 
         # Otherwise, if it's safe to attack and we have enough boost, 
         # attack.         
-        if attack_is_worth(self, csv_line) 
+        if self.attack_is_worth(csv_line):
             return 2
 
         # Otherwise, grab some boost unless we have enough boost.         
-        if boost_is_worth(self, csv_line) 
+        if self.boost_is_worth(csv_line):
             return 4 
 
         # Otherwise, play defensively. 
         # TODO: Nothing! This is a "fallback" case! 
         return 1 
-
-    def actively_saving_is_worth(self, csv_line): 
-
-        # TODO: Return true if the ball will go into the bot's 
-        # net in the next six seconds 
-
-    def scoring_is_worth(self, csv_line):
-
-        # TODO: Write a method that returns true if the following
-        # criteria are true: 
-        #   - The ball is in scoreable range (will be in middle half 
-        #     front half of field)
-        #   - We can beat the opponent to the ball if both players
-        #     use all their boost by at least .5 seconds
-    
-    def defending_is_necessary(self, csv_line):
-
-        # TODO: Write a method that returns true if the following
-        # criteria are true: 
-        #    - If the opponent is able to clear towards our net (between
-        #      their goal and the ball and within a distance of maybe like
-        #      a quarter of the field length, so like 500uu)
-
-    def attack_is_worth(self, csv_line):
-
-        # TODO: Write a method that returns true if the following 
-        # criteria are true: 
-        #    - If The opponent is not immediately able to clear towards 
-        #      our net (can use same method as above)
-        #    - We have at least 50 (arbitary value) boost 
-
-    def boost_is_worth(self, csv_line):
-
-        return int(csv_line[69]) <= 30 
 
     def set_maneuver(self, packet: GameTickPacket, prediction_slices):
         my_car = packet.game_cars[self.index]
