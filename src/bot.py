@@ -41,33 +41,6 @@ class MyBot(BaseAgent):
         self.collected_data = []
         self.time_since_last_log = time.time() # Don't want to save a log any more than .1 seconds, but also don't want it to be blocking 
         self.current_csv_name = self.get_next_csv_name()
-
-    # def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
-    #     self.set_maneuver(packet)
-
-    #     my_car = packet.game_cars[self.index]
-    #     car_location = Vec3(my_car.physics.location)
-
-    #     # Find the direction of our car using the Orientation class
-    #     car_orientation = Orientation(my_car.physics.rotation)
-    #     car_direction = car_orientation.forward
-
-    #     steer_correction_radians = find_correction(car_direction, self.get_target(packet) - car_location)
-
-    #     if steer_correction_radians > 0:
-    #         # Positive radians in the unit circle is a turn to the left.
-    #         turn = -1.0  # Negative value for a turn to the left.
-    #         action_display = "turn left"
-    #     else:
-    #         turn = 1.0
-    #         action_display = "turn right"
-
-    #     self.controller_state.throttle = 1.0
-    #     self.controller_state.steer = turn
-
-    #     draw_debug(self.renderer, my_car, packet.game_ball, action_display)
-
-    #     return self.controller_state
     
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         self.set_maneuver(packet, self.get_ball_prediction_struct())
@@ -108,23 +81,6 @@ class MyBot(BaseAgent):
         with open("./MyBots/RLBot-Puddles/src/output/" + str(self.current_csv_name) + ".csv", "w", newline="") as f: 
             writer = csv.writer(f)
             writer.writerows(self.collected_data)
-
-    # def get_target(self, packet: GameTickPacket) -> Vec3:
-    #     if self.maneuver.name == "Attack":
-    #         return Vec3(packet.game_ball.physics.location)
-    #     else:
-    #         # Constant values can be found the the FieldInfo:
-    #         info = self.get_field_info()
-            
-    #         # Manually construct a list of all big boost pads
-    #         # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
-    #         big_pads = []
-    #         for i in range(info.num_boosts):
-    #             pad = info.boost_pads[i]
-    #             if pad.is_full_boost:
-    #                 big_pads.append(pad)
-
-    #         return Vec3(big_pads[0].location)
 
     def set_maneuver(self, packet: GameTickPacket, prediction_slices):
 
@@ -184,6 +140,21 @@ class MyBot(BaseAgent):
     def go_to_ball(self, packet: GameTickPacket):
         self.go_to_position(packet, packet.game_ball.physics.location)
 
+    # def hit_ball_to_goal(self, packet: GameTickPacket):
+    #     ball_prediction = self.get_ball_prediction_struct()
+    #     my_car = packet.game_cars[self.index]
+    #     speed = my_car.physics.velocity.length()
+
+    #     starting_time = ball_prediction.slices[0].game_seconds
+
+    #     if ball_prediction is not None:
+    #         for i in range(0, ball_prediction.num_slices):
+    #             prediction_slice = ball_prediction.slices[i]
+    #             location = prediction_slice.physics.location
+    #             if abs(location.y - goalYVal) < 80 and abs(location.x) < 900.0:
+    #                 return True
+    #     self.go_to_ball(packet)
+
     def go_to_position(self, packet: GameTickPacket, ideal: Vec3):
         my_car = packet.game_cars[self.index]
         car_orientation = Orientation(my_car.physics.rotation)
@@ -206,7 +177,7 @@ class MyBot(BaseAgent):
             self.controller_state.handbrake = False
 
         # TODO: change. always boost
-        self.controller_state.boost = True
+        self.controller_state.boost = not self.controller_state.handbrake
 
         self.controller_state.throttle = 1.0
         self.controller_state.steer = turn
