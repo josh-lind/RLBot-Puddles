@@ -232,6 +232,8 @@ class MyBot(BaseAgent):
         # If the ball is actively projected to go in our net in the 
         # next six seconds, save it. 
         # TODO: Write a method that returns True if this will occur. 
+        if actively_saving_is_worth(self)
+            return 0 
 
         # Otherwise, if the ball is "safely scoreable", save it 
         # TODO: Write a method that returns true if the following
@@ -240,6 +242,8 @@ class MyBot(BaseAgent):
         #     front half of field)
         #   - We can beat the opponent to the ball if both players
         #     use all their boost by at least .5 seconds
+        if scoring_is_worth(self)
+            return 2 
 
         # Otherwise, if we are in a situation wehre we "need to 
         # defend", defend. 
@@ -248,6 +252,8 @@ class MyBot(BaseAgent):
         #    - If the opponent is able to clear towards our net (between
         #      their goal and the ball and within a distance of maybe like
         #      a quarter of the field length, so like 500uu)
+        if defending_is_necessary(self) 
+            return 1 
 
         # Otherwise, if it's safe to attack and we have enough boost, 
         # attack. 
@@ -256,15 +262,19 @@ class MyBot(BaseAgent):
         #    - If The opponent is not immediately able to clear towards 
         #      our net (can use same method as above)
         #    - We have at least 50 (arbitary value) boost 
+        if attack_is_worth(self) 
+            return 2
 
         # Otherwise, grab some boost unless we have enough boost. 
         # TODO: Write a method that returns true if the following
         # criteria are true: 
         #    - If we are below thirty boost
+        if boost_is_worth(self) 
+            return 4 
 
         # Otherwise, play defensively. 
         # TODO: Nothing! This is a "fallback" case! 
-
+        return 1 
 
     def set_maneuver(self, packet: GameTickPacket, prediction_slices):
         my_car = packet.game_cars[self.index]
