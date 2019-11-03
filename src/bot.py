@@ -88,16 +88,140 @@ class MyBot(BaseAgent):
     def update_log(self, packet):
 
         csv_line = []
-            
-        # Bot XYZ
+
+        ''' PlayerInfo Object (Bot) '''
+        # Position (X, Y, Z) 
         csv_line.insert(0, str(packet.game_cars[0].physics.location.x))
         csv_line.insert(1, str(packet.game_cars[0].physics.location.y))
         csv_line.insert(2, str(packet.game_cars[0].physics.location.z))
 
-        # Other Player XYZ 
-        csv_line.insert(3, str(packet.game_cars[1].physics.location.x))
-        csv_line.insert(4, str(packet.game_cars[1].physics.location.y))
-        csv_line.insert(5, str(packet.game_cars[1].physics.location.z))
+        # Rotation (Roll, Pitch, Yaw)
+        csv_line.insert(3, str(packet.game_cars[0].physics.rotation.roll))
+        csv_line.insert(4, str(packet.game_cars[0].physics.rotation.pitch))
+        csv_line.insert(5, str(packet.game_cars[0].physics.rotation.yaw))
+
+        # Velocity (X/s, Y/s, Z/s) 
+        csv_line.insert(6, str(packet.game_cars[0].physics.velocity.x))
+        csv_line.insert(7, str(packet.game_cars[0].physics.velocity.y))
+        csv_line.insert(8, str(packet.game_cars[0].physics.velocity.z))
+
+        # Angular Velocity (Roll/s, Pitch/s, Yaw/s)
+        csv_line.insert(9, str(packet.game_cars[0].physics.angular_velocity.x))
+        csv_line.insert(10, str(packet.game_cars[0].physics.angular_velocity.y))
+        csv_line.insert(11, str(packet.game_cars[0].physics.angular_velocity.z))
+
+        # Bot Score, Goals, Own Goals, Saves, Shots, Demolitions
+        csv_line.insert(12, str(packet.game_cars[0].score_info.score))
+        csv_line.insert(13, str(packet.game_cars[0].score_info.goals))
+        csv_line.insert(14, str(packet.game_cars[0].score_info.own_goals))
+        csv_line.insert(15, str(packet.game_cars[0].score_info.saves))
+        csv_line.insert(16, str(packet.game_cars[0].score_info.shots))
+        csv_line.insert(17, str(packet.game_cars[0].score_info.demolitions))
+
+        # Has Wheel Contact
+        csv_line.insert(18, str(packet.game_cars[0].has_wheel_contact))
+
+        # Is Currently Supersonic
+        csv_line.insert(19, str(packet.game_cars[0].is_super_sonic))
+
+        # Has Currently Jumped
+        csv_line.insert(20, str(packet.game_cars[0].jumped))
+
+        # Has Currently Used Double Jump 
+        csv_line.insert(21, str(packet.game_cars[0].double_jumped))
+
+        ''' PlayerInfo Object (Enemy) ''' 
+        # Position (X, Y, Z) 
+        csv_line.insert(22, str(packet.game_cars[1].physics.location.x))
+        csv_line.insert(23, str(packet.game_cars[1].physics.location.y))
+        csv_line.insert(24, str(packet.game_cars[1].physics.location.z))
+
+        # Rotation (Roll, Pitch, Yaw)
+        csv_line.insert(25, str(packet.game_cars[1].physics.rotation.roll))
+        csv_line.insert(26, str(packet.game_cars[1].physics.rotation.pitch))
+        csv_line.insert(27, str(packet.game_cars[1].physics.rotation.yaw))
+
+        # Velocity (X/s, Y/s, Z/s) 
+        csv_line.insert(28, str(packet.game_cars[1].physics.velocity.x))
+        csv_line.insert(29, str(packet.game_cars[1].physics.velocity.y))
+        csv_line.insert(30, str(packet.game_cars[1].physics.velocity.z))
+
+        # Angular Velocity (Roll/s, Pitch/s, Yaw/s)
+        csv_line.insert(31, str(packet.game_cars[1].physics.angular_velocity.x))
+        csv_line.insert(32, str(packet.game_cars[1].physics.angular_velocity.y))
+        csv_line.insert(33, str(packet.game_cars[1].physics.angular_velocity.z))
+
+        # Bot Score
+        csv_line.insert(34, str(packet.game_cars[1].score_info.score))
+        csv_line.insert(35, str(packet.game_cars[1].score_info.goals))
+        csv_line.insert(36, str(packet.game_cars[1].score_info.own_goals))
+        csv_line.insert(37, str(packet.game_cars[1].score_info.saves))
+        csv_line.insert(38, str(packet.game_cars[1].score_info.shots))
+        csv_line.insert(39, str(packet.game_cars[1].score_info.demolitions))
+
+        # Has Wheel Contact
+        csv_line.insert(40, str(packet.game_cars[1].has_wheel_contact))
+
+        # Is Currently Supersonic
+        csv_line.insert(41, str(packet.game_cars[1].is_super_sonic))
+
+        # Has Currently Jumped
+        csv_line.insert(42, str(packet.game_cars[1].jumped))
+
+        # Has Currently Used Double Jump 
+        csv_line.insert(43, str(packet.game_cars[1].double_jumped))
+
+        ''' BallInfo Object ''' 
+        # Ball X, Y, Z
+        csv_line.insert(44, str(packet.game_ball.physics.location.x))
+        csv_line.insert(45, str(packet.game_ball.physics.location.y))
+        csv_line.insert(46, str(packet.game_ball.physics.location.z))
+
+        # Ball Velocity (X/s, Y/s, Z/s)
+        csv_line.insert(47, str(packet.game_ball.physics.velocity.x))
+        csv_line.insert(48, str(packet.game_ball.physics.velocity.y))
+        csv_line.insert(49, str(packet.game_ball.physics.velocity.z))
+
+        # Ball Angular Velocity (Roll/s, Pitch/s, Yaw/s)
+        csv_line.insert(50, str(packet.game_ball.physics.angular_velocity.x))
+        csv_line.insert(51, str(packet.game_ball.physics.angular_velocity.y))
+        csv_line.insert(52, str(packet.game_ball.physics.angular_velocity.z))
+
+        ''' Latest Touch Object '''
+        # Last Player To Touch (True if Bot, False Otherwise) 
+        csv_line.insert(53, str(packet.game_ball.latest_touch.player_index is self.team))
+
+        # Point of contact for touch X, Y, Z
+        csv_line.insert(54, str(packet.game_ball.latest_touch.hit_location.x))
+        csv_line.insert(55, str(packet.game_ball.latest_touch.hit_location.y))
+        csv_line.insert(56, str(packet.game_ball.latest_touch.hit_location.z))
+
+        # Direction of the touch X, Y, Z
+        csv_line.insert(57, str(packet.game_ball.latest_touch.hit_normal.x))
+        csv_line.insert(58, str(packet.game_ball.latest_touch.hit_normal.y))
+        csv_line.insert(59, str(packet.game_ball.latest_touch.hit_normal.z))
+
+        ''' GameInfo Object '''
+        # Total seconds elapsed (seconds, I assume)
+        # Estimating high here, will revise once I see the CSV 
+        csv_line.insert(60, str(packet.game_info.seconds_elapsed))
+
+        # Total game time remaining (seconds, I assume)
+        csv_line.insert(61, str(packet.game_info.game_time_remaining))
+
+        # Is Overtime (True if not, False otherwise)
+        csv_line.insert(62, str(packet.game_info.is_overtime))
+
+        ''' Predicted Ball Position ''' 
+
+        ''' BoostPadState Object '''
+        # Activation state for each of the 34 boost pads 
+        index = 63
+        for boost_pad in packet.game_boosts:
+            csv_line.insert(index, str(boost_pad.is_active))
+            csv_line.insert(index + 1, str(boost_pad.timer))
+            index += 2 
+        index = 63
 
         # Append onto the variable that holds all our data 
         self.collected_data.append(csv_line)
