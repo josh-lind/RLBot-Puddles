@@ -231,7 +231,7 @@ class MyBot(BaseAgent):
         elif self.maneuver.name is not "PreventGoal" and impending_goal:
             self.maneuver.name = "PreventGoal"
             self.maneuver.prevent_goal_properties.chasing_ball = False
-        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y) and not impending_goal and abs(ball_loc.y) < 4000:
+        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y) and not impending_goal and abs(ball_loc.y) < 3500:
             self.maneuver.name = "GetHomeBoost"
         
     # This method calls the correct functions dependant on what maneuver we are executing
@@ -244,18 +244,14 @@ class MyBot(BaseAgent):
             self.hit_ball_to_goal(packet)
 
     def prevent_goal(self, packet: GameTickPacket):
-        goalYVal = -5200.0 if self.team == 0 else 5200.0
-        car_to_own_goal = Vec3(0.0, goalYVal, 0.0) - packet.game_cars[self.index].physics.location
-
         if not self.will_enter_goal(packet):
             self.maneuver.name = None
             self.maneuver.prevent_goal_properties.chasing_ball = False
             return
 
-        if car_to_own_goal.length() > 2000.0 and self.maneuver.prevent_goal_properties.chasing_ball is not True:
+        if self.maneuver.prevent_goal_properties.chasing_ball is not True:
             self.get_to_goal_post(packet)
         else:
-            self.maneuver.prevent_goal_properties.chasing_ball = True
             self.go_to_ball(packet)
 
     def will_enter_goal(self, packet: GameTickPacket) -> bool:
@@ -266,7 +262,7 @@ class MyBot(BaseAgent):
             for i in range(0, ball_prediction.num_slices):
                 prediction_slice = ball_prediction.slices[i]
                 location = prediction_slice.physics.location
-                if abs(location.y - goalYVal) < 80 and abs(location.x) < 900.0:
+                if abs(location.y - goalYVal) < 700 and abs(location.x) < 900.0:
                     return True
         return False
 
@@ -274,9 +270,13 @@ class MyBot(BaseAgent):
         my_car = packet.game_cars[self.index]
         car_location = Vec3(my_car.physics.location)
 
-        goToX = 900.0 if car_location.x > 0 else -900.0
-        goToY = -5000.0 if self.team == 0 else 5000.0
-        self.go_to_position(packet, Vec3(goToX, goToY, 0.0))
+        goToX = 1000.0 if car_location.x > 0 else -1000.0
+        goToY = -4500.0 if self.team == 0 else 4500.0
+        target: Vec3 =  Vec3(goToX, goToY, 0.0)
+        self.go_to_position(packet, target)
+
+        if target.dist(packet.game_cars[self.index].physics.location) < 200:
+            self.maneuver.prevent_goal_properties.chasing_ball = True
 
     def go_to_ball(self, packet: GameTickPacket):
         self.go_to_position(packet, packet.game_ball.physics.location)
@@ -298,14 +298,14 @@ class MyBot(BaseAgent):
                 ball_difference: Vec3 = Vec3(location) - Vec3(my_car.physics.location)
                 distance_to_ball = ball_difference.length()
                 if distance_to_ball < speed * (prediction_slice.game_seconds - starting_time):
+                    # self.go_to_position(packet, location)
                     self.go_to_position(packet, self.get_vector_90_away_from_goal(location, their_goal))
                     return
         self.go_to_ball(packet)
 
     def get_vector_90_away_from_goal(self, ball_location: Vec3, goal_location: Vec3) -> Vec3:
         goal_to_ball: Vec3 = Vec3(ball_location) - Vec3(goal_location)
-        goal_to_ball = goal_to_ball / goal_to_ball.length()
-        return ball_location + goal_to_ball
+        return Vec3(ball_location) + goal_to_ball.rescale(90.0)
 
     def go_to_position(self, packet: GameTickPacket, ideal: Vec3):
         my_car = packet.game_cars[self.index]
@@ -317,10 +317,10 @@ class MyBot(BaseAgent):
         # Turn left if steer correction is positive in radians
         turn_direction_multiplier = -1.0 if steer_correction_radians > 0 else 1.0
         abs_correction = abs(steer_correction_radians)
-        if abs_correction >= .4:
+        if abs_correction >= .5:
             turn = 1 * turn_direction_multiplier
         else:
-            turn = abs_correction * 2.5 * turn_direction_multiplier
+            turn = abs_correction * 2 * turn_direction_multiplier
 
         # Powerslide if the angle of correction is more than 1 radian
         if abs_correction > 1.3:
@@ -364,7 +364,7 @@ class MyBot(BaseAgent):
                     min_dist=dist
                     min_dist_index = i
         self.go_to_position(packet, info.boost_pads[min_dist_index].location)
-        if min_dist < 150:
+        if min_dist < 500:
             self.maneuver.name = None
 
 
