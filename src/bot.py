@@ -139,7 +139,7 @@ class MyBot(BaseAgent):
         elif self.maneuver.name is not "PreventGoal" and impending_goal:
             self.maneuver.name = "PreventGoal"
             self.maneuver.prevent_goal_properties.chasing_ball = False
-        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y) and not impending_goal:
+        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y) and not impending_goal and abs(ball_loc.y) < 4000:
             self.maneuver.name = "GetHomeBoost"
         
     # This method calls the correct functions dependant on what maneuver we are executing
@@ -160,7 +160,7 @@ class MyBot(BaseAgent):
             self.maneuver.prevent_goal_properties.chasing_ball = False
             return
 
-        if car_to_own_goal.length() > 1000.0 and self.maneuver.prevent_goal_properties.chasing_ball is not True:
+        if car_to_own_goal.length() > 2000.0 and self.maneuver.prevent_goal_properties.chasing_ball is not True:
             self.get_to_goal_post(packet)
         else:
             self.maneuver.prevent_goal_properties.chasing_ball = True
@@ -174,7 +174,7 @@ class MyBot(BaseAgent):
             for i in range(0, ball_prediction.num_slices):
                 prediction_slice = ball_prediction.slices[i]
                 location = prediction_slice.physics.location
-                if abs(location.y - goalYVal) < 30.0 and abs(location.x) < 900.0:
+                if abs(location.y - goalYVal) < 80 and abs(location.x) < 900.0:
                     return True
         return False
 
@@ -246,6 +246,8 @@ class MyBot(BaseAgent):
                     min_dist=dist
                     min_dist_index = i
         self.go_to_position(packet, info.boost_pads[min_dist_index].location)
+        if min_dist < 150:
+            self.maneuver.name = None
 
 
 
