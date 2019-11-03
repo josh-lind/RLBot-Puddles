@@ -195,14 +195,19 @@ class MyBot(BaseAgent):
         csv_line.insert(67, str(ball_prediction_struct.slices[120].physics.location.y))
         csv_line.insert(68, str(ball_prediction_struct.slices[120].physics.location.z))
 
+        ''' Boost ''' 
+        # Bot, then Enemy 
+        csv_line.insert(69, str(packet.game_cars[0].boost))
+        csv_line.insert(70, str(packet.game_cars[1].boost))
+
         ''' BoostPadState Object '''
         # Activation state for each of the 34 boost pads 
-        index = 69
+        index = 71
         for boost_pad in packet.game_boosts:
             csv_line.insert(index, str(boost_pad.is_active))
             csv_line.insert(index + 1, str(boost_pad.timer))
             index += 2
-        index = 69
+        index = 71
 
         # If the ball is projected to be in the goal at ANY point within the next six seconds (True if so, False if not)
         # TODO: This
@@ -231,37 +236,37 @@ class MyBot(BaseAgent):
 
         # If the ball is actively projected to go in our net in the 
         # next six seconds, save it. 
-        if actively_saving_is_worth(self)
+        if actively_saving_is_worth(self, csv_line)
             return 0 
 
         # Otherwise, if the ball is "safely scoreable", save it 
-        if scoring_is_worth(self)
+        if scoring_is_worth(self, csv_line)
             return 3
 
         # Otherwise, if we are in a situation wehre we "need to 
         # defend", defend.        
-        if defending_is_necessary(self) 
+        if defending_is_necessary(self, csv_line) 
             return 1 
 
         # Otherwise, if it's safe to attack and we have enough boost, 
         # attack.         
-        if attack_is_worth(self) 
+        if attack_is_worth(self, csv_line) 
             return 2
 
         # Otherwise, grab some boost unless we have enough boost.         
-        if boost_is_worth(self) 
+        if boost_is_worth(self, csv_line) 
             return 4 
 
         # Otherwise, play defensively. 
         # TODO: Nothing! This is a "fallback" case! 
         return 1 
 
-    def actively_saving_is_worth(self): 
+    def actively_saving_is_worth(self, csv_line): 
 
         # TODO: Return true if the ball will go into the bot's 
         # net in the next six seconds 
 
-    def scoring_is_worth(self):
+    def scoring_is_worth(self, csv_line):
 
         # TODO: Write a method that returns true if the following
         # criteria are true: 
@@ -270,7 +275,7 @@ class MyBot(BaseAgent):
         #   - We can beat the opponent to the ball if both players
         #     use all their boost by at least .5 seconds
     
-    def defending_is_necessary(self):
+    def defending_is_necessary(self, csv_line):
 
         # TODO: Write a method that returns true if the following
         # criteria are true: 
@@ -278,7 +283,7 @@ class MyBot(BaseAgent):
         #      their goal and the ball and within a distance of maybe like
         #      a quarter of the field length, so like 500uu)
 
-    def attack_is_worth(self):
+    def attack_is_worth(self, csv_line):
 
         # TODO: Write a method that returns true if the following 
         # criteria are true: 
@@ -286,11 +291,9 @@ class MyBot(BaseAgent):
         #      our net (can use same method as above)
         #    - We have at least 50 (arbitary value) boost 
 
-    def boost_is_worth(self):
+    def boost_is_worth(self, csv_line):
 
-        # TODO: Write a method that returns true if the following
-        # criteria are true: 
-        #    - If we are below thirty boost
+        return int(csv_line[69]) <= 30 
 
     def set_maneuver(self, packet: GameTickPacket, prediction_slices):
         my_car = packet.game_cars[self.index]
