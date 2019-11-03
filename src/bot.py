@@ -20,7 +20,7 @@ class MyBot(BaseAgent):
     def get_next_csv_name(self):
 
         # Read in the number we should make it 
-        f = open("./MyBots/RLBot-Puddles/src/nextcsvnumber.txt", "r"); 
+        f = open("./MyBots/RLBot-Puddles/src/nextcsvnumber.txt", "r")
         returnValue = int(f.read())
         f.close()
 
@@ -131,14 +131,18 @@ class MyBot(BaseAgent):
 
         if self.maneuver.name == None:
             self.maneuver.name = "Attack"
-        elif self.maneuver.name is not "PreventGoal" and self.will_enter_goal(packet):
+        elif self.maneuver.name is not "PreventGoal" and impending_goal:
             self.maneuver.name = "PreventGoal"
             self.maneuver.prevent_goal_properties.chasing_ball = False
+        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y) and not impending_goal and abs(ball_loc.y) < 4000:
+            self.maneuver.name = "GetHomeBoost"
         
-
+    # This method calls the correct functions dependant on what maneuver we are executing
     def exec_maneuver(self, packet: GameTickPacket):
         if self.maneuver.name == "PreventGoal":
             self.prevent_goal(packet)
+        elif self.maneuver.name == "GetHomeBoost":
+            self.get_home_boost(packet)
         else:
             self.go_to_ball(packet)
 
@@ -151,7 +155,7 @@ class MyBot(BaseAgent):
             self.maneuver.prevent_goal_properties.chasing_ball = False
             return
 
-        if car_to_own_goal.length() > 1000.0 and self.maneuver.prevent_goal_properties.chasing_ball is not True:
+        if car_to_own_goal.length() > 2000.0 and self.maneuver.prevent_goal_properties.chasing_ball is not True:
             self.get_to_goal_post(packet)
         else:
             self.maneuver.prevent_goal_properties.chasing_ball = True
@@ -165,7 +169,7 @@ class MyBot(BaseAgent):
             for i in range(0, ball_prediction.num_slices):
                 prediction_slice = ball_prediction.slices[i]
                 location = prediction_slice.physics.location
-                if abs(location.y - goalYVal) < 30.0 and abs(location.x) < 900.0:
+                if abs(location.y - goalYVal) < 80 and abs(location.x) < 900.0:
                     return True
         return False
 
@@ -216,11 +220,11 @@ class MyBot(BaseAgent):
         for i in range(info.num_boosts):
             pad = info.boost_pads[i]
             if pad.is_full_boost:
-                dist = abs((pad.physics.location-packet.game_cars[self.index].physics.location).length())
+                dist = abs((pad.location - packet.game_cars[self.index].physics.location).length())
                 if min_dist > dist:
                     min_dist=dist
                     min_dist_index = i
-        self.go_to_position(packet,info.boost_pads[min_dist_index].physics.location)
+        self.go_to_position(packet,info.boost_pads[min_dist_index].location)
 
     def get_home_boost(self, packet: GameTickPacket):
         boost_Yval = -4100.0 if self.team == 0 else 4100.0
@@ -231,12 +235,14 @@ class MyBot(BaseAgent):
         # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
         for i in range(info.num_boosts):
             pad = info.boost_pads[i]
-            if pad.is_full_boost and abs(pad.physics.location.y-boost_Yval) < 100:
-                dist = abs((pad.physics.location-packet.game_cars[self.index].physics.location).length())
+            if pad.is_full_boost and abs(pad.location.y - boost_Yval) < 100:
+                dist = abs((Vec3(pad.location) - Vec3(packet.game_cars[self.index].physics.location)).length())
                 if min_dist > dist:
                     min_dist=dist
                     min_dist_index = i
-        self.go_to_position(packet,info.boost_pads[min_dist_index].physics.location)
+        self.go_to_position(packet, info.boost_pads[min_dist_index].location)
+        if min_dist < 150:
+            self.maneuver.name = None
 
 
 
@@ -259,7 +265,7 @@ def find_correction(current: Vec3, ideal: Vec3) -> float:
     return diff
 
 #used to check position vectors
-def isbetween(x: float, y1: float, y2: float):
+def isbetween(x: float, y1: float, y2: float) -> bool:
     if  y1 <= x <=y2:
         return True
 
