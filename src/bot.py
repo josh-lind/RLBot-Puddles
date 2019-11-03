@@ -132,18 +132,22 @@ class MyBot(BaseAgent):
         opponent_goal_y = -7000.0 if self.team == 1 else 7000.0
         ball_loc = packet.game_ball.physics.location
 
+        impending_goal = self.will_enter_goal(packet)
+
         if self.maneuver.name == None:
             self.maneuver.name = "Attack"
-        elif self.maneuver.name is not "PreventGoal" and self.will_enter_goal(packet):
+        elif self.maneuver.name is not "PreventGoal" and impending_goal:
             self.maneuver.name = "PreventGoal"
             self.maneuver.prevent_goal_properties.chasing_ball = False
-        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y)
+        elif isbetween(car_location.y, ball_loc.y, opponent_goal_y) and not impending_goal:
             self.maneuver.name = "GetHomeBoost"
         
     # This method calls the correct functions dependant on what maneuver we are executing
     def exec_maneuver(self, packet: GameTickPacket):
         if self.maneuver.name == "PreventGoal":
             self.prevent_goal(packet)
+        elif self.maneuver.name == "GetHomeBoost":
+            self.get_home_boost(packet)
         else:
             self.go_to_ball(packet)
 
@@ -264,7 +268,7 @@ def find_correction(current: Vec3, ideal: Vec3) -> float:
     return diff
 
 #used to check position vectors
-def isbetween(x: float, y1: float, y2: float):
+def isbetween(x: float, y1: float, y2: float) -> bool:
     if  y1 <= x <=y2:
         return True
 
