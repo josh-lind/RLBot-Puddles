@@ -1,6 +1,7 @@
 import math
 import csv, time # Used for logging 
 
+
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
 
@@ -69,7 +70,7 @@ class MyBot(BaseAgent):
     #     return self.controller_state
     
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
-        self.set_maneuver(packet)
+        self.set_maneuver(packet, self.get_ball_prediction_struct())
 
         self.exec_maneuver(packet)
 
@@ -125,7 +126,9 @@ class MyBot(BaseAgent):
 
     #         return Vec3(big_pads[0].location)
 
-    def set_maneuver(self, packet: GameTickPacket):
+    def set_maneuver(self, packet: GameTickPacket, prediction_slices):
+
+
         if self.maneuver.name == None:
             self.maneuver.name = "Attack"
         elif self.maneuver.name is not "PreventGoal" and self.will_enter_goal(packet):
