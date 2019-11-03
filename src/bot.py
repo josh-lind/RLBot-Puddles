@@ -19,7 +19,7 @@ class MyBot(BaseAgent):
     def get_next_csv_name(self):
 
         # Read in the number we should make it 
-        f = open("./MyBots/RLBot-Puddles/src/nextcsvnumber.txt", "r"); 
+        f = open("./MyBots/RLBot-Puddles/src/nextcsvnumber.txt", "r")
         returnValue = int(f.read())
         f.close()
 
@@ -225,11 +225,11 @@ class MyBot(BaseAgent):
         for i in range(info.num_boosts):
             pad = info.boost_pads[i]
             if pad.is_full_boost:
-                dist = abs((pad.physics.location-packet.game_cars[self.index].physics.location).length())
+                dist = abs((pad.location - packet.game_cars[self.index].physics.location).length())
                 if min_dist > dist:
                     min_dist=dist
                     min_dist_index = i
-        self.go_to_position(packet,info.boost_pads[min_dist_index].physics.location)
+        self.go_to_position(packet,info.boost_pads[min_dist_index].location)
 
     def get_home_boost(self, packet: GameTickPacket):
         boost_Yval = -4100.0 if self.team == 0 else 4100.0
@@ -240,12 +240,12 @@ class MyBot(BaseAgent):
         # info.boost_pads has a fixed size but info.num_boosts is how many pads there actually are
         for i in range(info.num_boosts):
             pad = info.boost_pads[i]
-            if pad.is_full_boost and abs(pad.physics.location.y-boost_Yval) < 100:
-                dist = abs((pad.physics.location-packet.game_cars[self.index].physics.location).length())
+            if pad.is_full_boost and abs(pad.location.y - boost_Yval) < 100:
+                dist = abs((Vec3(pad.location) - Vec3(packet.game_cars[self.index].physics.location)).length())
                 if min_dist > dist:
                     min_dist=dist
                     min_dist_index = i
-        self.go_to_position(packet,info.boost_pads[min_dist_index].physics.location)
+        self.go_to_position(packet, info.boost_pads[min_dist_index].location)
 
 
 
